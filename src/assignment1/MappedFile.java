@@ -1,66 +1,60 @@
 package assignment1;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Paths;
 import java.util.Random;
-
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class MappedFile {
     private static final int SleepTime = 1000;
-    private static final File FILE = new File("data.txt");
-    private static final Random RANDOM;
-
-    static {
-        RANDOM = new Random();
-    }
-
-    private static final int BUFFER_SIZE = 3;
+    private static final File FILE = new File("file.dat");
+    private static final Random RANDOM = new Random();
+    private static final int BUFFER_SIZE = 16;
     private static final int ITERATION_COUNT = 10;
     private static final int STOP = -1;
     private static final int CONTINUE = 1;
-    private final MappedByteBuffer buffer;
+    private final RandomAccessFile file_;
+    private final MappedByteBuffer buffer_;
 
-    public MappedFile(File file, OperationMode mode) throws Exception_as1 {
+    public MappedFile(File file, OperationMode mode) throws ExceptionAS1 {
         try {
-            if (mode == OperationMode.Write) file.delete();
-            else {
+            if (mode == OperationMode.Write) {
+                file.delete();
+            } else {
                 if (!file.exists() && !file.isFile() && !file.canRead()) {
-                    throw new Exception_as1(
-                            "file " + file + " no data");
+                    throw new ExceptionAS1(
+                            "file " + file + " doesn't exist or cannot be read");
                 }
             }
-            FileChannel channel = FileChannel.open(Paths.get("data.txt"), READ, WRITE);
-            buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+            file_ = new RandomAccessFile(file, "rw");
+            FileChannel channel = file_.getChannel();
+            buffer_ = channel.map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
         } catch (Throwable e) {
-            throw new Exception_as1(e);
+            throw new ExceptionAS1(e);
         }
-
     }
 
     public void write(int iterationCount) {
         boolean runInfinitely = (iterationCount <= 0);
         int iterationsLeftCount = iterationCount;
         while (runInfinitely || iterationsLeftCount > 0) {
-            buffer.rewind();
-            buffer.getInt();
-            int lastOperationMark = buffer.getInt();
+            buffer_.rewind();
+            buffer_.getInt();
+            int lastOperationMark = buffer_.getInt();
             if (lastOperationMark == OperationMode.Read.getMark()) {
-                int num1 = RANDOM.nextInt();
-                int num2 = RANDOM.nextInt();
-                buffer.rewind();
-                buffer.putInt(CONTINUE).putInt(OperationMode.Write.getMark()).putInt(num1).putInt(num2);
+                int val1 = RANDOM.nextInt();
+                int val2 = RANDOM.nextInt();
+                buffer_.rewind();
+                buffer_.putInt(CONTINUE).putInt(OperationMode.Write.getMark()).putInt(val1).putInt(val2);
                 if (!runInfinitely) {
                     iterationsLeftCount--;
                 }
             }
             sleep();
         }
-        buffer.rewind();
-        buffer.putInt(STOP).putInt(OperationMode.Write.getMark());
+        buffer_.rewind();
+        buffer_.putInt(STOP).putInt(OperationMode.Write.getMark());
     }
 
     public void write() {
@@ -68,21 +62,21 @@ public final class MappedFile {
     }
 
     public void read() {
-
+        main:
         while (true) {
-            buffer.rewind();
-            int stopOrContinue = buffer.getInt();
-            int lastOperationMark = buffer.getInt();
+            buffer_.rewind();
+            int stopOrContinue = buffer_.getInt();
+            int lastOperationMark = buffer_.getInt();
             if (stopOrContinue == STOP && lastOperationMark == OperationMode.Write.getMark()) {
-                break;
+                break main;
             } else {
                 if (lastOperationMark == OperationMode.Write.getMark()) {
-                    int num1 = buffer.getInt();
-                    int num2 = buffer.getInt();
-                    buffer.rewind();
-                    buffer.putInt(CONTINUE).putInt(OperationMode.Read.getMark());
-                    int sum = num1 + num2;
-                    System.out.println("Sum: " + sum);
+                    int val1 = buffer_.getInt();
+                    int val2 = buffer_.getInt();
+                    buffer_.rewind();
+                    buffer_.putInt(CONTINUE).putInt(OperationMode.Read.getMark());
+                    int sum = val1 + val2;
+                    System.out.println("sum: " + sum);
                 }
             }
             sleep();
@@ -92,7 +86,7 @@ public final class MappedFile {
     public static void main(String... args) {
         try {
             if (args.length < 1) {
-                System.out.println("read or write should be clarified as argument");
+                System.out.println("read or write should be specified as argument");
                 return;
             }
             OperationMode mode = OperationMode.getMode(args[0]);
@@ -107,6 +101,7 @@ public final class MappedFile {
                         break;
                     default:
                         System.out.println("invalid argument: " + args[0]);
+                        return;
                 }
             }
         } catch (Throwable ex) {
