@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
 import java.util.Random;
+
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 public final class MappedFile {
     private static final int SleepTime = 1000;
@@ -14,6 +18,7 @@ public final class MappedFile {
     private static final int ITERATION_COUNT = 10;
     private static final int STOP = -1;
     private static final int CONTINUE = 1;
+//    private final FileChannel file_;
     private final RandomAccessFile file_;
     private final MappedByteBuffer buffer_;
 
@@ -30,6 +35,9 @@ public final class MappedFile {
             file_ = new RandomAccessFile(file, "rw");
             FileChannel channel = file_.getChannel();
             buffer_ = channel.map(FileChannel.MapMode.READ_WRITE, 0, BUFFER_SIZE);
+//            file_ = FileChannel.open(Paths.get("data.txt"), READ, WRITE);
+//            FileChannel channel = file_.
+//            buffer_ = file_.map(FileChannel.MapMode.READ_WRITE,0, BUFFER_SIZE);
         } catch (Throwable e) {
             throw new ExceptionAS1(e);
         }
