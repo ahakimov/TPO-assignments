@@ -8,7 +8,7 @@ import java.util.Random;
 
 public final class MappedFile {
     private static final int SleepTime = 1000;
-    private static final File FILE = new File("file.dat");
+    private static final File FILE = new File("data.txt");
     private static final Random RANDOM = new Random();
     private static final int BUFFER_SIZE = 16;
     private static final int ITERATION_COUNT = 10;
